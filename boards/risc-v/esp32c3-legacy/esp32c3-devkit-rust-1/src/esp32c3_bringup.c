@@ -59,6 +59,19 @@
 #  include "esp32c3_ble.h"
 #endif
 
+#ifdef CONFIG_ESP32C3_I2C
+#  include "esp32c3_board_i2c.h"
+#endif
+
+#if defined(CONFIG_VIDEO_FB) && defined(CONFIG_LCD_FRAMEBUFFER)
+#  include <nuttx/video/fb.h>
+#endif
+
+#ifdef CONFIG_LCD_DEV
+#  include <nuttx/board.h>
+#  include <nuttx/lcd/lcd_dev.h>
+#endif
+
 #include "esp32c3_board_apds9960.h"
 
 /****************************************************************************
@@ -137,6 +150,14 @@ int esp32c3_bringup(void)
     }
 #endif
 
+#ifdef CONFIG_DEV_GPIO
+  ret = esp32c3_gpio_init();
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "Failed to initialize GPIO Driver: %d\n", ret);
+    }
+#endif
+
 #ifdef CONFIG_VIDEO_FB
   /* Initialize and register the framebuffer driver */
 
@@ -144,6 +165,48 @@ int esp32c3_bringup(void)
   if (ret < 0)
     {
       syslog(LOG_ERR, "ERROR: fb_register() failed: %d\n", ret);
+    }
+#endif
+
+#ifdef CONFIG_I2C_DRIVER
+
+#ifdef CONFIG_ESP32C3_I2C0
+  /* ret = esp32c3_i2c_register(0); */
+
+  ret = board_i2c_init();
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "Failed to initialize I2C Driver for I2C0: %d\n", ret);
+    }
+#endif
+
+#endif
+
+#ifdef CONFIG_LCD_DEV
+  ret = board_lcd_initialize();
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "ERROR: board_lcd_initialize() failed: %d\n", ret);
+    }
+
+  ret = lcddev_register(0);
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "ERROR: lcddev_register() failed: %d\n", ret);
+    }
+#endif
+
+#if defined(CONFIG_VIDEO_FB) && defined(CONFIG_LCD_FRAMEBUFFER)
+  syslog(LOG_INFO, "Bringing Up Frame buffer... ");
+
+  ret = fb_register(0, 0);
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "ERROR: fb_register() failed: %d\n", ret);
+    }
+  else
+    {
+      syslog(LOG_INFO, "OK\n");
     }
 #endif
 

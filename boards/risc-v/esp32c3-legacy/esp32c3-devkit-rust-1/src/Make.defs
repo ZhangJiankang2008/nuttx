@@ -34,6 +34,14 @@ ifeq ($(CONFIG_ARCH_LEDS),y)
   CSRCS += esp32c3_autoleds.c
 endif
 
+ifeq ($(CONFIG_DEV_GPIO),y)
+  CSRCS += esp32c3_gpio.c
+endif
+
+ifeq ($(CONFIG_LCD_SSD1306_I2C),y)
+  CSRCS += esp32_ssd1306.c
+endif
+
 ifeq ($(CONFIG_BOARDCTL_IOCTL),y)
   CSRCS += esp32c3_ioctl.c
 endif
